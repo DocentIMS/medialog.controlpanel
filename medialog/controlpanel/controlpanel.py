@@ -71,9 +71,12 @@ class MedialogControlpanelSettingsEditForm(controlpanel.RegistryEditForm):
             #if not name.startswith('medialog'):
             #    continue
 
-            interface = resolve(name)
-            if IMedialogControlpanelSettingsProvider.providedBy(interface):
-                yield interface
+            try:
+                interface = resolve(name)
+                if IMedialogControlpanelSettingsProvider.providedBy(interface):
+                    yield interface
+            except ModuleNotFoundError:
+                pass
 
 
     def updateFields(self):
