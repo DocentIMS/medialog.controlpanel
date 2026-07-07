@@ -34,7 +34,7 @@ class ContextProxy(object):
 
     def __getattr__(self, name):
         if name.startswith('__') or name.startswith('_ContextProxy__'):
-            return object.__getattr__(self, name)
+            raise AttributeError(name)
 
         registry = getUtility(IRegistry)
         for interface in self.__interfaces:
@@ -71,12 +71,22 @@ class MedialogControlpanelSettingsEditForm(controlpanel.RegistryEditForm):
             #if not name.startswith('medialog'):
             #    continue
 
+            # ``name`` is a dotted interface name coming from another
+            # add-on's registry records. Resolving it can fail in several
+            # ways when that add-on has been upgraded or removed:
+            #   - ModuleNotFoundError/ImportError: the module is gone
+            #   - AttributeError: the module exists but the interface class
+            #     was renamed or removed
+            #   - ValueError: the stored name is malformed
+            # Any of these for a single stale record must not take down the
+            # whole control panel, so we skip records we cannot resolve.
             try:
                 interface = resolve(name)
-                if IMedialogControlpanelSettingsProvider.providedBy(interface):
-                    yield interface
-            except ModuleNotFoundError:
-                pass
+            except (ImportError, AttributeError, ValueError):
+                continue
+
+            if IMedialogControlpanelSettingsProvider.providedBy(interface):
+                yield interface
 
 
     def updateFields(self):
