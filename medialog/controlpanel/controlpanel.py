@@ -59,6 +59,20 @@ class MedialogControlpanelSettingsEditForm(controlpanel.RegistryEditForm):
 
     @property
     def additionalSchemata(self):
+        # Resolving the settings providers requires scanning every record in
+        # the registry. z3c.form accesses ``additionalSchemata`` several
+        # times during a single request (form update, widget update,
+        # rendering, extraction), so we cache the resolved tuple on the
+        # instance. A fresh form instance is created per request, which makes
+        # this effectively per-request memoisation: newly (un)installed
+        # add-ons are picked up on the next request.
+        schemata = getattr(self, '_medialog_additional_schemata', None)
+        if schemata is None:
+            schemata = tuple(self._resolve_settings_providers())
+            self._medialog_additional_schemata = schemata
+        return schemata
+
+    def _resolve_settings_providers(self):
         registry = getUtility(IRegistry)
         interface_names = set(record.interfaceName for record
                               in registry.records.values())
