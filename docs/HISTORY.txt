@@ -2,6 +2,16 @@ Changelog
 =========
 
 
+1.6 (21.09.2026)
+-------------------
+
+- Skip registry records whose interface cannot be resolved (renamed/removed
+  add-ons) instead of crashing the whole control panel
+- Fixed ContextProxy.__getattr__ raising a misleading error for missing
+  dunder attributes
+- Cache the resolved settings providers per request in additionalSchemata
+
+
 1.4 (25.10.2022)
 -------------------
 
